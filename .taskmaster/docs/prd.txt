@@ -1,0 +1,140 @@
+# Solace Advocate Matching Platform - Engineering Assignment PRD
+
+## Project Overview
+
+**Project Name:** Solace Advocate Matching Platform Improvements
+**Duration:** 2 hours maximum
+**Objective:** Improve existing NextJS advocate matching table with bug fixes, UI/UX enhancements, and performance optimizations
+
+## Background
+
+Solace aims to match patients with advocates who are best suited to their needs. The current implementation is a NextJS application with a searchable table of advocates, but it contains bugs, anti-patterns, and performance issues that need to be addressed.
+
+## Core Requirements
+
+### 1. Bug Fixes and Anti-Pattern Resolution
+- Identify and fix glaring bugs in the existing codebase
+- Address anti-patterns and improve code quality
+- Ensure proper error handling and edge case management
+- Fix any broken functionality in the advocate table
+
+### 2. UI/UX Design Improvements
+- Enhance the patient-facing advocate search experience
+- Improve visual design and user interface
+- Ensure responsive design across devices
+- Focus on usability for prospective patients searching for advocates
+- Maintain or improve accessibility standards
+- Utilize Tailwind CSS (or other preferred styling framework)
+
+### 3. Performance Optimizations
+- Frontend performance improvements for table rendering and search
+- Backend optimization for handling large datasets (hundreds of thousands of advocates)
+- Implement efficient search and filtering mechanisms
+- Optimize database queries and data fetching
+- Consider pagination, virtualization, or infinite scroll for large datasets
+
+## Technical Constraints
+
+### Technology Stack
+- **Frontend:** NextJS with React
+- **Styling:** Tailwind CSS (other frameworks allowed)
+- **Backend:** NextJS API routes (treat as separate API server)
+- **Database:** As configured in the existing application
+
+### API Requirements
+- All API calls must go through NextJS backend endpoints
+- Avoid Next.js server actions - use traditional API routes
+- Assume API server is separate from frontend application
+
+### Development Guidelines
+- Create one or multiple PRs against main branch
+- Include detailed PR descriptions explaining changes and improvements
+- Focus on both frontend and backend improvements
+- Consider scalability for hundreds of thousands of advocates
+
+## Deliverables
+
+### Primary Deliverables
+1. **GitHub Repository** with PR(s) containing:
+   - Bug fixes and anti-pattern resolutions
+   - UI/UX improvements
+   - Performance optimizations
+   - Clear commit messages and PR descriptions
+
+2. **DISCUSSION.md** file documenting:
+   - Additional improvements that would be made with more time
+   - Rationale for architectural decisions
+   - Performance optimization strategies
+   - Any trade-offs made due to time constraints
+
+### Code Quality Requirements
+- Clean, maintainable code following best practices
+- Proper error handling and validation
+- Responsive design implementation
+- Performance considerations for large datasets
+- Documentation of significant changes
+
+## Success Metrics
+
+### Functionality
+- All existing features work correctly
+- Search and filtering perform efficiently
+- No critical bugs or broken functionality
+- Proper handling of edge cases
+
+### Performance
+- Fast loading times for advocate table
+- Efficient search across large datasets
+- Optimized database queries
+- Responsive UI interactions
+
+### User Experience
+- Intuitive and easy-to-use interface
+- Clear presentation of advocate information
+- Effective search and filtering capabilities
+- Mobile-responsive design
+
+### Code Quality
+- Clean, readable, and maintainable code
+- Proper separation of concerns
+- Following React and NextJS best practices
+- Appropriate use of TypeScript (if applicable)
+
+## Additional Considerations
+
+### Creative Freedom
+- Encouraged to implement additional improvements beyond core requirements
+- Consider innovative features that enhance patient-advocate matching
+- Explore modern web development patterns and optimizations
+
+### Time Management
+- Maximum 2 hours of development time
+- Prioritize high-impact improvements
+- Document future improvements in DISCUSSION.md if time runs out
+
+### Review Process
+- GitHub reviewers: alyant, mwrather, ericcallan
+- Focus on code quality, problem-solving approach, and technical decisions
+- Evaluation includes both implementation and documentation
+
+## Technical Implementation Areas
+
+### Frontend Focus Areas
+- Component structure and reusability
+- State management for search/filtering
+- Performance optimization for large lists
+- User interface polish and accessibility
+- Loading states and error handling
+
+### Backend Focus Areas
+- API endpoint optimization
+- Database query efficiency
+- Data validation and sanitization
+- Error handling and logging
+- Scalability considerations
+
+### Full-Stack Integration
+- Efficient data flow between frontend and backend
+- Proper API design and usage
+- Caching strategies
+- Security considerations

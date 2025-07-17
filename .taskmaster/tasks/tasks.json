@@ -1,0 +1,206 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Code Audit and Bug Identification",
+        "description": "Perform a comprehensive audit of the existing codebase to identify bugs, anti-patterns, and performance issues in the advocate matching table.",
+        "details": "Review the entire NextJS application codebase with focus on:\n1. Component structure and prop drilling issues\n2. State management implementation\n3. React rendering optimization issues (unnecessary re-renders)\n4. Error handling gaps\n5. API integration points\n6. Performance bottlenecks in table rendering\n7. Edge case handling\n\nDocument all identified issues in a structured format with severity ratings and impact assessment. Categorize issues into:\n- Critical bugs (breaking functionality)\n- Anti-patterns (affecting maintainability)\n- Performance issues (affecting user experience)\n- UI/UX inconsistencies",
+        "testStrategy": "Create a test plan document outlining:\n1. Manual testing scenarios for identified bugs\n2. Performance benchmarking methodology\n3. Cross-browser and device testing approach\n4. Edge case test scenarios\n\nUse React DevTools and Chrome Performance tools to measure current performance metrics as baseline.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "API Route Optimization",
+        "description": "Optimize NextJS API routes for efficient data fetching and handling of large advocate datasets.",
+        "details": "1. Refactor existing API routes to support pagination, filtering, and sorting\n2. Implement query parameter validation and sanitization\n3. Add proper error handling with appropriate HTTP status codes\n4. Optimize database queries to handle large datasets efficiently\n5. Implement the following API endpoints:\n   - GET /api/advocates - with pagination, filtering, sorting\n   - GET /api/advocates/:id - for individual advocate details\n\nExample implementation:\n```javascript\n// pages/api/advocates.js\nexport default async function handler(req, res) {\n  try {\n    const { page = 1, limit = 20, search = '', sortBy = 'name', sortDir = 'asc' } = req.query;\n    \n    // Validate query parameters\n    const pageNum = parseInt(page, 10);\n    const limitNum = parseInt(limit, 10);\n    \n    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {\n      return res.status(400).json({ error: 'Invalid pagination parameters' });\n    }\n    \n    // Calculate offset for pagination\n    const offset = (pageNum - 1) * limitNum;\n    \n    // Build query with search filter\n    const query = {};\n    if (search) {\n      query.$or = [\n        { name: { $regex: search, $options: 'i' } },\n        { specialties: { $regex: search, $options: 'i' } }\n      ];\n    }\n    \n    // Execute query with pagination and sorting\n    const advocates = await db.collection('advocates')\n      .find(query)\n      .sort({ [sortBy]: sortDir === 'asc' ? 1 : -1 })\n      .skip(offset)\n      .limit(limitNum)\n      .toArray();\n    \n    // Get total count for pagination metadata\n    const total = await db.collection('advocates').countDocuments(query);\n    \n    return res.status(200).json({\n      advocates,\n      pagination: {\n        total,\n        page: pageNum,\n        limit: limitNum,\n        pages: Math.ceil(total / limitNum)\n      }\n    });\n  } catch (error) {\n    console.error('API error:', error);\n    return res.status(500).json({ error: 'Internal server error' });\n  }\n}\n```",
+        "testStrategy": "1. Create unit tests for API routes using Jest\n2. Test pagination with various page sizes and offsets\n3. Test search functionality with different query parameters\n4. Test sorting with different fields and directions\n5. Test error handling with invalid inputs\n6. Load testing with simulated large datasets\n7. Measure response times and optimize as needed",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Pagination in API Routes",
+            "description": "Create pagination functionality for API routes to efficiently handle large datasets of advocates",
+            "dependencies": [],
+            "details": "Create a pagination utility that: 1) Extracts and validates page and limit parameters from request queries, 2) Calculates proper offset for database queries, 3) Returns appropriate metadata (total count, current page, total pages) along with results. Implement this in the GET /api/advocates endpoint first, ensuring proper error handling for invalid pagination parameters.",
+            "status": "in-progress",
+            "testStrategy": "Test with various page sizes and offsets, verify correct slicing of data, test edge cases (page=0, negative values, non-numeric inputs), and verify pagination metadata accuracy."
+          },
+          {
+            "id": 2,
+            "title": "Implement Query Parameter Validation and Sanitization",
+            "description": "Create robust validation and sanitization for all API query parameters to prevent injection attacks and ensure data integrity",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a validation middleware that: 1) Validates all incoming query parameters against predefined schemas, 2) Sanitizes parameters to prevent injection attacks, 3) Converts parameters to appropriate types (numbers, booleans, etc.), 4) Returns standardized error responses for invalid inputs. Implement for search, sort, filter, and pagination parameters.",
+            "status": "pending",
+            "testStrategy": "Test with valid and invalid inputs, test with potential injection attacks, verify type conversion works correctly, and ensure proper error responses are returned for invalid inputs."
+          },
+          {
+            "id": 3,
+            "title": "Optimize Database Queries for Large Datasets",
+            "description": "Refactor database queries to efficiently handle large advocate datasets with proper indexing and query optimization",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Optimize database queries by: 1) Creating appropriate indexes for frequently queried fields (name, specialties, etc.), 2) Using projection to return only necessary fields, 3) Implementing efficient search with proper index utilization, 4) Using aggregation pipeline for complex queries instead of in-memory filtering. Ensure all queries use the pagination parameters correctly.",
+            "status": "pending",
+            "testStrategy": "Benchmark query performance with large datasets (1000+ records), test query execution time with and without indexes, verify correct results are returned with optimized queries, and test with various search/filter combinations."
+          },
+          {
+            "id": 4,
+            "title": "Implement Filtering and Sorting Functionality",
+            "description": "Add comprehensive filtering and sorting capabilities to the advocates API endpoint",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implement filtering and sorting by: 1) Supporting multiple filter criteria (specialties, experience level, location, etc.), 2) Allowing complex filter combinations with AND/OR logic, 3) Supporting sorting by any field with ascending/descending options, 4) Ensuring all filters and sorts work with pagination. Update the API to accept these parameters and apply them to database queries.",
+            "status": "pending",
+            "testStrategy": "Test various filter combinations, verify sort order is correct for different fields, test combining filters with sorting and pagination, and verify performance remains acceptable with complex queries."
+          },
+          {
+            "id": 5,
+            "title": "Implement Individual Advocate API Endpoint",
+            "description": "Create a dedicated API endpoint for retrieving detailed information about a single advocate",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement GET /api/advocates/:id endpoint that: 1) Validates the advocate ID parameter, 2) Retrieves comprehensive advocate details including related data, 3) Returns appropriate error responses for non-existent advocates, 4) Implements proper error handling and status codes, 5) Optimizes the query to fetch only necessary data for a single advocate view.",
+            "status": "pending",
+            "testStrategy": "Test with valid and invalid advocate IDs, verify all expected advocate details are returned, test error handling for non-existent advocates, and measure response time for detailed advocate retrieval."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Data Fetching Layer",
+        "description": "Create an efficient data fetching layer to handle API communication between frontend and backend.",
+        "details": "1. Implement a dedicated data fetching layer using React Query or SWR for efficient caching and state management\n2. Create custom hooks for advocate data operations\n3. Implement error handling and loading states\n4. Add retry logic for failed requests\n5. Implement request cancellation for abandoned searches\n\nExample implementation with React Query:\n```javascript\n// hooks/useAdvocates.js\nimport { useQuery } from 'react-query';\nimport axios from 'axios';\n\nconst fetchAdvocates = async ({ page = 1, limit = 20, search = '', sortBy = 'name', sortDir = 'asc' }) => {\n  const params = new URLSearchParams({\n    page,\n    limit,\n    search,\n    sortBy,\n    sortDir\n  });\n  \n  const { data } = await axios.get(`/api/advocates?${params}`);\n  return data;\n};\n\nexport function useAdvocates(filters, options = {}) {\n  return useQuery(\n    ['advocates', filters],\n    () => fetchAdvocates(filters),\n    {\n      keepPreviousData: true,\n      staleTime: 5 * 60 * 1000, // 5 minutes\n      ...options\n    }\n  );\n}\n\nexport function useAdvocate(id) {\n  return useQuery(\n    ['advocate', id],\n    async () => {\n      const { data } = await axios.get(`/api/advocates/${id}`);\n      return data;\n    },\n    {\n      enabled: !!id\n    }\n  );\n}\n```",
+        "testStrategy": "1. Unit test custom hooks with React Testing Library\n2. Test caching behavior and stale-while-revalidate patterns\n3. Test error handling scenarios\n4. Test loading states and transitions\n5. Mock API responses for consistent testing\n6. Test retry logic and request cancellation",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Virtualized Table Component",
+        "description": "Create a virtualized table component for efficient rendering of large advocate datasets.",
+        "details": "1. Implement a virtualized table using react-window or react-virtualized\n2. Support dynamic row heights for responsive design\n3. Implement efficient rendering of only visible rows\n4. Add smooth scrolling and keyboard navigation\n5. Support column resizing and reordering\n\nExample implementation:\n```javascript\nimport React, { useCallback } from 'react';\nimport { FixedSizeList as List } from 'react-window';\nimport AutoSizer from 'react-virtualized-auto-sizer';\n\nconst VirtualizedTable = ({ data, columns, rowHeight = 50 }) => {\n  const Row = useCallback(\n    ({ index, style }) => {\n      const item = data[index];\n      return (\n        <div \n          className=\"flex items-center border-b border-gray-200 hover:bg-gray-50\" \n          style={style}\n        >\n          {columns.map((column) => (\n            <div \n              key={column.key} \n              className=\"px-4 py-2\" \n              style={{ width: column.width || 'auto' }}\n            >\n              {column.render ? column.render(item) : item[column.key]}\n            </div>\n          ))}\n        </div>\n      );\n    },\n    [data, columns]\n  );\n\n  const Header = useCallback(() => (\n    <div className=\"flex items-center border-b border-gray-300 bg-gray-100 font-semibold\">\n      {columns.map((column) => (\n        <div \n          key={column.key} \n          className=\"px-4 py-2\" \n          style={{ width: column.width || 'auto' }}\n        >\n          {column.header}\n        </div>\n      ))}\n    </div>\n  ), [columns]);\n\n  return (\n    <div className=\"w-full h-full\">\n      <Header />\n      <AutoSizer>\n        {({ height, width }) => (\n          <List\n            height={height - rowHeight} // Subtract header height\n            itemCount={data.length}\n            itemSize={rowHeight}\n            width={width}\n          >\n            {Row}\n          </List>\n        )}\n      </AutoSizer>\n    </div>\n  );\n};\n\nexport default VirtualizedTable;\n```",
+        "testStrategy": "1. Test rendering performance with large datasets (1000+ items)\n2. Test scrolling performance and memory usage\n3. Test responsive behavior across different screen sizes\n4. Test keyboard navigation and accessibility\n5. Test with various column configurations\n6. Benchmark rendering times compared to non-virtualized table",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Advanced Search and Filtering",
+        "description": "Create an advanced search and filtering system for the advocate matching table.",
+        "details": "1. Implement debounced search input to prevent excessive API calls\n2. Create filter components for different advocate attributes (specialties, location, availability, etc.)\n3. Implement client-side filtering for quick feedback\n4. Add URL-based filtering for shareable search results\n5. Support complex filter combinations\n\nExample implementation:\n```javascript\nimport { useState, useEffect, useCallback } from 'react';\nimport { useRouter } from 'next/router';\nimport debounce from 'lodash/debounce';\n\nexport function useAdvocateFilters(initialFilters = {}) {\n  const router = useRouter();\n  const [filters, setFilters] = useState({\n    search: '',\n    specialties: [],\n    location: '',\n    availability: '',\n    page: 1,\n    limit: 20,\n    sortBy: 'name',\n    sortDir: 'asc',\n    ...initialFilters\n  });\n\n  // Update URL when filters change\n  const updateUrl = useCallback(\n    debounce((newFilters) => {\n      const query = {};\n      Object.entries(newFilters).forEach(([key, value]) => {\n        if (value && (typeof value !== 'object' || value.length > 0)) {\n          query[key] = Array.isArray(value) ? value.join(',') : value;\n        }\n      });\n      \n      router.push(\n        {\n          pathname: router.pathname,\n          query\n        },\n        undefined,\n        { shallow: true }\n      );\n    }, 500),\n    [router]\n  );\n\n  // Update filters\n  const updateFilters = useCallback((newFilters) => {\n    setFilters(prev => {\n      const updated = { ...prev, ...newFilters, page: newFilters.search !== prev.search ? 1 : prev.page };\n      updateUrl(updated);\n      return updated;\n    });\n  }, [updateUrl]);\n\n  // Reset filters\n  const resetFilters = useCallback(() => {\n    const defaultFilters = {\n      search: '',\n      specialties: [],\n      location: '',\n      availability: '',\n      page: 1,\n      limit: 20,\n      sortBy: 'name',\n      sortDir: 'asc'\n    };\n    setFilters(defaultFilters);\n    updateUrl(defaultFilters);\n  }, [updateUrl]);\n\n  // Initialize filters from URL on mount\n  useEffect(() => {\n    if (Object.keys(router.query).length > 0) {\n      const urlFilters = {};\n      Object.entries(router.query).forEach(([key, value]) => {\n        if (key === 'specialties' && typeof value === 'string') {\n          urlFilters[key] = value.split(',');\n        } else {\n          urlFilters[key] = value;\n        }\n      });\n      setFilters(prev => ({ ...prev, ...urlFilters }));\n    }\n  }, [router.query]);\n\n  return { filters, updateFilters, resetFilters };\n}\n```",
+        "testStrategy": "1. Test debounce functionality to ensure it prevents excessive API calls\n2. Test URL synchronization with filter state\n3. Test filter combinations and edge cases\n4. Test performance with complex filter combinations\n5. Test URL sharing functionality\n6. Test filter reset functionality",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Responsive UI Design",
+        "description": "Enhance the advocate matching table with responsive design for all device sizes.",
+        "details": "1. Implement responsive layout using Tailwind CSS\n2. Create mobile-optimized view for small screens\n3. Implement collapsible sections for detailed advocate information\n4. Add touch-friendly controls for mobile users\n5. Ensure proper spacing and typography across devices\n\nExample implementation:\n```javascript\n// components/AdvocateCard.js\nconst AdvocateCard = ({ advocate }) => {\n  const [expanded, setExpanded] = useState(false);\n  \n  return (\n    <div className=\"bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg\">\n      <div className=\"p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4\">\n        <div className=\"relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex-shrink-0\">\n          <Image \n            src={advocate.profileImage || '/placeholder-avatar.png'} \n            alt={advocate.name}\n            layout=\"fill\"\n            objectFit=\"cover\"\n          />\n        </div>\n        \n        <div className=\"flex-grow\">\n          <h3 className=\"text-lg sm:text-xl font-semibold text-gray-900\">{advocate.name}</h3>\n          <p className=\"text-sm text-gray-600\">{advocate.specialties.join(', ')}</p>\n          <div className=\"mt-2 flex flex-wrap gap-2\">\n            {advocate.tags.map(tag => (\n              <span key={tag} className=\"px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800\">\n                {tag}\n              </span>\n            ))}\n          </div>\n        </div>\n        \n        <button \n          onClick={() => setExpanded(!expanded)}\n          className=\"text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center\"\n        >\n          {expanded ? 'Less info' : 'More info'}\n          <svg className={`ml-1 w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n            <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M19 9l-7 7-7-7\" />\n          </svg>\n        </button>\n      </div>\n      \n      {expanded && (\n        <div className=\"px-4 sm:px-6 pb-4 sm:pb-6 pt-0 border-t border-gray-100\">\n          <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4 mt-4\">\n            <div>\n              <h4 className=\"text-sm font-medium text-gray-500\">Location</h4>\n              <p className=\"text-gray-900\">{advocate.location}</p>\n            </div>\n            <div>\n              <h4 className=\"text-sm font-medium text-gray-500\">Availability</h4>\n              <p className=\"text-gray-900\">{advocate.availability}</p>\n            </div>\n            <div className=\"md:col-span-2\">\n              <h4 className=\"text-sm font-medium text-gray-500\">About</h4>\n              <p className=\"text-gray-900\">{advocate.bio}</p>\n            </div>\n          </div>\n          <div className=\"mt-4 flex justify-end\">\n            <button className=\"px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors\">\n              Connect with {advocate.name.split(' ')[0]}\n            </button>\n          </div>\n        </div>\n      )}\n    </div>\n  );\n};\n```",
+        "testStrategy": "1. Test responsive layouts across different device sizes (mobile, tablet, desktop)\n2. Test touch interactions on mobile devices\n3. Test layout shifts during responsive transitions\n4. Verify accessibility on mobile devices\n5. Test performance on low-end mobile devices\n6. Conduct usability testing on different screen sizes",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Error Handling and Loading States",
+        "description": "Create comprehensive error handling and loading state management throughout the application.",
+        "details": "1. Implement global error boundary for React components\n2. Create consistent loading states for data fetching operations\n3. Add error notification system\n4. Implement retry mechanisms for failed operations\n5. Add fallback UI for error states\n\nExample implementation:\n```javascript\n// components/ErrorBoundary.js\nimport React from 'react';\n\nclass ErrorBoundary extends React.Component {\n  constructor(props) {\n    super(props);\n    this.state = { hasError: false, error: null };\n  }\n\n  static getDerivedStateFromError(error) {\n    return { hasError: true, error };\n  }\n\n  componentDidCatch(error, errorInfo) {\n    console.error('Error caught by ErrorBoundary:', error, errorInfo);\n    // Log to monitoring service\n  }\n\n  render() {\n    if (this.state.hasError) {\n      return this.props.fallback ? (\n        this.props.fallback(this.state.error)\n      ) : (\n        <div className=\"p-6 bg-red-50 rounded-lg\">\n          <h2 className=\"text-xl font-semibold text-red-800 mb-2\">Something went wrong</h2>\n          <p className=\"text-red-600 mb-4\">We're sorry, but there was an error loading this content.</p>\n          <button\n            onClick={() => this.setState({ hasError: false, error: null })}\n            className=\"px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors\"\n          >\n            Try again\n          </button>\n        </div>\n      );\n    }\n\n    return this.props.children;\n  }\n}\n\n// components/LoadingState.js\nexport function LoadingState({ isLoading, error, onRetry, children }) {\n  if (isLoading) {\n    return (\n      <div className=\"p-6 flex justify-center items-center\">\n        <div className=\"animate-pulse flex space-x-4\">\n          <div className=\"rounded-full bg-gray-200 h-12 w-12\"></div>\n          <div className=\"flex-1 space-y-4 py-1\">\n            <div className=\"h-4 bg-gray-200 rounded w-3/4\"></div>\n            <div className=\"space-y-2\">\n              <div className=\"h-4 bg-gray-200 rounded\"></div>\n              <div className=\"h-4 bg-gray-200 rounded w-5/6\"></div>\n            </div>\n          </div>\n        </div>\n      </div>\n    );\n  }\n\n  if (error) {\n    return (\n      <div className=\"p-6 bg-red-50 rounded-lg\">\n        <h3 className=\"text-lg font-medium text-red-800 mb-2\">Error loading data</h3>\n        <p className=\"text-red-600 mb-4\">{error.message || 'An unexpected error occurred'}</p>\n        {onRetry && (\n          <button\n            onClick={onRetry}\n            className=\"px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors\"\n          >\n            Retry\n          </button>\n        )}\n      </div>\n    );\n  }\n\n  return children;\n}\n```",
+        "testStrategy": "1. Test error boundary with simulated component errors\n2. Test loading states with delayed API responses\n3. Test error handling with simulated API failures\n4. Test retry mechanisms\n5. Verify error messages are user-friendly\n6. Test fallback UI components",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Accessibility Enhancements",
+        "description": "Improve accessibility of the advocate matching platform to meet WCAG standards.",
+        "details": "1. Add proper ARIA attributes to interactive elements\n2. Ensure keyboard navigation throughout the application\n3. Implement focus management for modals and dialogs\n4. Add screen reader announcements for dynamic content changes\n5. Ensure sufficient color contrast\n6. Add skip links for keyboard users\n\nExample implementation:\n```javascript\n// components/AccessibleTable.js\nimport { useRef, useEffect } from 'react';\n\nconst AccessibleTable = ({ data, columns, onRowClick }) => {\n  const tableRef = useRef(null);\n\n  // Announce data changes to screen readers\n  useEffect(() => {\n    const announcer = document.getElementById('sr-announcer');\n    if (announcer) {\n      announcer.textContent = `Table updated with ${data.length} advocates`;\n    }\n  }, [data.length]);\n\n  const handleKeyDown = (e, item) => {\n    if (e.key === 'Enter' || e.key === ' ') {\n      e.preventDefault();\n      onRowClick(item);\n    }\n  };\n\n  return (\n    <div className=\"overflow-x-auto\">\n      <table \n        ref={tableRef} \n        className=\"min-w-full divide-y divide-gray-200\" \n        aria-label=\"Advocate matching table\"\n      >\n        <thead className=\"bg-gray-50\">\n          <tr>\n            {columns.map((column) => (\n              <th \n                key={column.key} \n                scope=\"col\" \n                className=\"px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider\"\n                aria-sort={column.sortable ? (column.isSorted ? (column.isSortedDesc ? 'descending' : 'ascending') : 'none') : undefined}\n              >\n                {column.sortable ? (\n                  <button \n                    className=\"group inline-flex items-center font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm\"\n                    onClick={() => column.toggleSort()}\n                    aria-label={`Sort by ${column.header} ${column.isSorted ? (column.isSortedDesc ? 'ascending' : 'descending') : 'ascending'}`}\n                  >\n                    {column.header}\n                    <span className=\"ml-2\">\n                      {/* Sort icon */}\n                    </span>\n                  </button>\n                ) : (\n                  column.header\n                )}\n              </th>\n            ))}\n          </tr>\n        </thead>\n        <tbody className=\"bg-white divide-y divide-gray-200\">\n          {data.length > 0 ? (\n            data.map((item, index) => (\n              <tr \n                key={item.id || index}\n                onClick={() => onRowClick(item)}\n                onKeyDown={(e) => handleKeyDown(e, item)}\n                tabIndex=\"0\"\n                className=\"hover:bg-gray-50 cursor-pointer focus:outline-none focus:bg-blue-50\"\n                aria-label={`Advocate: ${item.name}`}\n              >\n                {columns.map((column) => (\n                  <td key={column.key} className=\"px-6 py-4 whitespace-nowrap\">\n                    {column.render ? column.render(item) : item[column.key]}\n                  </td>\n                ))}\n              </tr>\n            ))\n          ) : (\n            <tr>\n              <td colSpan={columns.length} className=\"px-6 py-4 text-center text-gray-500\">\n                No advocates found matching your criteria\n              </td>\n            </tr>\n          )}\n        </tbody>\n      </table>\n      <div id=\"sr-announcer\" className=\"sr-only\" aria-live=\"polite\" aria-atomic=\"true\"></div>\n    </div>\n  );\n};\n```",
+        "testStrategy": "1. Test with screen readers (NVDA, VoiceOver, JAWS)\n2. Test keyboard navigation throughout the application\n3. Run automated accessibility tests with tools like axe-core\n4. Test color contrast with WCAG compliance tools\n5. Test focus management in interactive components\n6. Conduct manual accessibility audit using WCAG 2.1 AA checklist",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Caching and Performance Optimizations",
+        "description": "Implement caching strategies and performance optimizations for the advocate matching platform.",
+        "details": "1. Implement client-side caching for API responses\n2. Add memoization for expensive calculations\n3. Implement code splitting for large components\n4. Optimize bundle size with dynamic imports\n5. Add service worker for offline support\n\nExample implementation:\n```javascript\n// lib/cache.js\nconst CACHE_PREFIX = 'solace-advocate-';\nconst DEFAULT_EXPIRY = 5 * 60 * 1000; // 5 minutes\n\nexport const cacheService = {\n  set: (key, data, expiry = DEFAULT_EXPIRY) => {\n    const cacheKey = `${CACHE_PREFIX}${key}`;\n    const item = {\n      data,\n      expiry: Date.now() + expiry\n    };\n    localStorage.setItem(cacheKey, JSON.stringify(item));\n  },\n  \n  get: (key) => {\n    const cacheKey = `${CACHE_PREFIX}${key}`;\n    const item = localStorage.getItem(cacheKey);\n    \n    if (!item) return null;\n    \n    try {\n      const parsedItem = JSON.parse(item);\n      \n      if (Date.now() > parsedItem.expiry) {\n        localStorage.removeItem(cacheKey);\n        return null;\n      }\n      \n      return parsedItem.data;\n    } catch (error) {\n      localStorage.removeItem(cacheKey);\n      return null;\n    }\n  },\n  \n  remove: (key) => {\n    const cacheKey = `${CACHE_PREFIX}${key}`;\n    localStorage.removeItem(cacheKey);\n  },\n  \n  clear: () => {\n    Object.keys(localStorage)\n      .filter(key => key.startsWith(CACHE_PREFIX))\n      .forEach(key => localStorage.removeItem(key));\n  }\n};\n\n// pages/_app.js\nimport dynamic from 'next/dynamic';\n\n// Dynamically import heavy components\nconst AdvocateDetailModal = dynamic(\n  () => import('../components/AdvocateDetailModal'),\n  { \n    loading: () => <div className=\"p-4\">Loading...</div>,\n    ssr: false // Disable server-side rendering for this component\n  }\n);\n\n// Use React.memo for pure components\nconst AdvocateListItem = React.memo(function AdvocateListItem({ advocate, onClick }) {\n  return (\n    <div className=\"p-4 border-b\" onClick={() => onClick(advocate)}>\n      <h3>{advocate.name}</h3>\n      <p>{advocate.specialties.join(', ')}</p>\n    </div>\n  );\n});\n```",
+        "testStrategy": "1. Benchmark application performance before and after optimizations\n2. Test caching behavior with different cache expiration settings\n3. Test memory usage with large datasets\n4. Measure bundle sizes and load times\n5. Test code splitting with network throttling\n6. Use Lighthouse and WebPageTest for performance scoring",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Create DISCUSSION.md and Final Documentation",
+        "description": "Create comprehensive documentation including DISCUSSION.md file explaining architectural decisions, trade-offs, and future improvements.",
+        "details": "1. Document all implemented improvements and bug fixes\n2. Explain architectural decisions and their rationale\n3. Discuss performance optimization strategies\n4. List trade-offs made due to time constraints\n5. Suggest future improvements\n6. Include setup and usage instructions\n\nExample DISCUSSION.md structure:\n```markdown\n# Solace Advocate Matching Platform Improvements\n\n## Implemented Improvements\n\n### Bug Fixes\n- [List of bugs fixed with explanation]\n\n### UI/UX Improvements\n- [List of UI/UX improvements with screenshots if applicable]\n\n### Performance Optimizations\n- [List of performance optimizations with metrics if available]\n\n## Architectural Decisions\n\n### Data Fetching Strategy\n[Explanation of chosen data fetching approach and rationale]\n\n### State Management\n[Explanation of state management approach]\n\n### Component Structure\n[Explanation of component hierarchy and organization]\n\n## Performance Considerations\n\n### Large Dataset Handling\n[Explanation of how the application handles large datasets]\n\n### Caching Strategy\n[Explanation of caching implementation]\n\n### Bundle Optimization\n[Explanation of bundle size optimizations]\n\n## Trade-offs and Constraints\n\n[Discussion of trade-offs made due to time constraints]\n\n## Future Improvements\n\n[List of potential future improvements with rationale]\n\n## Setup and Usage\n\n[Instructions for setting up and using the application]\n```",
+        "testStrategy": "1. Review documentation for clarity and completeness\n2. Verify all implemented features are documented\n3. Ensure architectural decisions are clearly explained\n4. Check that future improvements are realistic and valuable\n5. Validate that setup instructions are accurate\n6. Have a peer review the documentation for feedback",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-17T16:53:13.314Z",
+      "updated": "2025-07-17T17:45:10.991Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
