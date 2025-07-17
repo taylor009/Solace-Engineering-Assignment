@@ -157,7 +157,7 @@ export default function Home() {
     setSortOrder("asc");
   };
 
-  const uniqueDegrees = [...new Set(advocates.map(advocate => advocate.degree))].sort();
+  const uniqueDegrees = Array.from(new Set(advocates.map(advocate => advocate.degree))).sort();
   const getSortIcon = (field: string) => {
     if (sortBy !== field) return "↕️";
     return sortOrder === "asc" ? "↑" : "↓";
