@@ -144,10 +144,10 @@ export default function Home() {
     }
   };
 
-  // Update filtered advocates when memoized result changes
+  // Apply filters whenever any filter value changes
   useEffect(() => {
-    setFilteredAdvocates(filteredAndSortedAdvocates);
-  }, [filteredAndSortedAdvocates]);
+    applyFilters();
+  }, [advocates, debouncedSearchTerm, filterByDegree, filterByExperience, sortBy, sortOrder]);
 
   const onReset = () => {
     setSearchTerm("");
