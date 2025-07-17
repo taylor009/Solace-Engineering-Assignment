@@ -17,6 +17,7 @@ export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("");
@@ -49,12 +50,21 @@ export default function Home() {
     fetchAdvocates();
   }, []);
 
+  // Debounce search term for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const applyFilters = () => {
     let filtered = [...advocates];
 
     // Apply search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
+    if (debouncedSearchTerm.trim()) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter((advocate) => {
         return (
           advocate.firstName.toLowerCase().includes(searchLower) ||
@@ -137,7 +147,7 @@ export default function Home() {
   // Apply filters whenever any filter value changes
   useEffect(() => {
     applyFilters();
-  }, [advocates, searchTerm, filterByDegree, filterByExperience, sortBy, sortOrder]);
+  }, [advocates, debouncedSearchTerm, filterByDegree, filterByExperience, sortBy, sortOrder]);
 
   const onReset = () => {
     setSearchTerm("");
@@ -158,6 +168,7 @@ export default function Home() {
       <main className="p-6">
         <h1 className="text-2xl font-bold mb-4">Solace Advocates</h1>
         <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <div className="text-lg">Loading advocates...</div>
         </div>
       </main>
@@ -244,10 +255,10 @@ export default function Home() {
           </div>
         </div>
         
-        {(searchTerm || filterByDegree || filterByExperience) && (
+        {(debouncedSearchTerm || filterByDegree || filterByExperience) && (
           <div className="text-sm text-gray-600">
             <span className="font-medium">Active filters:</span>
-            {searchTerm && <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Search: {searchTerm}</span>}
+            {debouncedSearchTerm && <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Search: {debouncedSearchTerm}</span>}
             {filterByDegree && <span className="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Degree: {filterByDegree}</span>}
             {filterByExperience && <span className="ml-2 bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Experience: {filterByExperience}</span>}
           </div>
